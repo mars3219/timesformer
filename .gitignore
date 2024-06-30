@@ -13,7 +13,7 @@ __pycache__/
 *.pth
 # C extensions
 *.so
-
+*.mp4
 # Distribution / packaging
 .Python
 build/

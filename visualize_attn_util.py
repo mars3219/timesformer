@@ -126,8 +126,12 @@ class DividedAttentionRollout():
   def remove_hooks(self): 
     for h in self.hooks: h.remove()
     
-  def __call__(self, path_to_video):
-    input_tensor = create_video_input(path_to_video)
+  def __call__(self, path_to_video, source_type="img"):
+    if source_type == "img":
+      input_tensor = create_video_input(path_to_video)
+    else:
+      input_tensor = path_to_video
+
     self.model.zero_grad()
     self.time_attentions = []
     self.space_attentions = []

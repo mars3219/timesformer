@@ -26,7 +26,7 @@ SOLVER:
   OPTIMIZING_METHOD: sgd
 MODEL:
   MODEL_NAME: vit_base_patch16_224
-  NUM_CLASSES: 600
+  NUM_CLASSES: 400
   ARCH: vit
   LOSS_FUNC: cross_entropy
   DROPOUT_RATE: 0.5

@@ -4,6 +4,7 @@ import json
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 # import cv2
 
 import torch
@@ -13,27 +14,29 @@ from timesformer.models import MODEL_REGISTRY
 import visualize_attn_util as vau
 
 if __name__ == "__main__":
-    model_file = '/workspace/TimeSformer/TimeSformer_divST_8_224_SSv2.pyth'
+    model_file = '/workspace/timesformer/TimeSformer_divST_8_224_SSv2.pyth'
     Path(model_file).exists()
 
     cfg = get_cfg()
-    cfg.merge_from_file('/workspace/TimeSformer/configs/SSv2/TimeSformer_divST_8_224.yaml')
+    cfg.merge_from_file('/workspace/timesformer/configs/SSv2/TimeSformer_divST_8_224.yaml')
     cfg.TRAIN.ENABLE = False
     cfg.TIMESFORMER.PRETRAINED_MODEL = model_file
     model = MODEL_REGISTRY.get('vit_base_patch16_224')(cfg)
 
-    with open('/workspace/TimeSformer/example_data/labels.json') as f:
+    with open('/workspace/timesformer/example_data/labels.json') as f:
         ssv2_labels = json.load(f)
     ssv2_labels = list(ssv2_labels.keys())
 
-    path_to_video = Path('/workspace/TimeSformer/example_data/74225/')
+    path_to_video = Path('/workspace/timesformer/example_data/74225/')
     path_to_video.exists()
 
     with torch.set_grad_enabled(False):
         np.random.seed(cfg.RNG_SEED)
         torch.manual_seed(cfg.RNG_SEED)
         model.eval()
+        st = time.time()
         pred = model(vau.create_video_input(path_to_video)).cpu().detach()
+        print("spent time: {}".format(time.time()-st))
 
     topk_scores, topk_label = torch.topk(pred, k=5, dim=-1)
     for i in range(5):
