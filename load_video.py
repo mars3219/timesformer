@@ -70,6 +70,7 @@ def analyze_frames(model, frame_queue, ssv2_labels):
                     frames_t = rearrange(frames_t, 't c h w -> c t h w')
                     frames_t = frames_t.unsqueeze(dim=0)  # Shape: (1, C, T, H, W)
                     model.eval()
+                    frames_t = frames_t.cuda()
                     pred = model((frames_t)).cpu().detach()
                     topk_scores, topk_label = torch.topk(pred, k=5, dim=-1)
                     print(f"Prediction index {topk_label[0,0]}")
@@ -77,15 +78,15 @@ def analyze_frames(model, frame_queue, ssv2_labels):
                     pred_name = ssv2_labels[topk_label.squeeze()[0].item()]
                     print(f"Prediction index {0}: {pred_name:<25}, score: {topk_scores.squeeze()[0].item():.3f}")
 
-                    masks = att_roll(frames_t, source_type="video")
-                    np_imgs = [transform_plot(frame) for frame in frames]
-                    masks = vau.create_masks(list(rearrange(masks, 'h w t -> t h w')), np_imgs)
+                    # masks = att_roll(frames_t, source_type="video")
+                    # np_imgs = [transform_plot(frame) for frame in frames]
+                    # masks = vau.create_masks(list(rearrange(masks, 'h w t -> t h w')), np_imgs)
                     
-                    cv2.imwrite('stacked_mask.jpg', np.hstack(masks))
+                    # cv2.imwrite('stacked_mask.jpg', np.hstack(masks))
+                    # np_imgs.clear()
 
                     frames.clear()
                     frames_o.clear()
-                    np_imgs.clear()
                 else:
                     continue
             except queue.Empty:
@@ -93,20 +94,21 @@ def analyze_frames(model, frame_queue, ssv2_labels):
 
 
 if __name__ == "__main__":
-    model_file = '/workspace/timesformer/TimeSformer_divST_8x32_224_K600.pyth'
+    model_file = '/workspace/TimeSformer/TimeSformer_divST_8x32_224_K600.pyth'
     assert Path(model_file).exists(), "Model file does not exist."
 
     cfg = get_cfg()
-    cfg.merge_from_file('/workspace/timesformer/configs/Kinetics/TimeSformer_divST_8x32_224.yaml')
+    cfg.merge_from_file('/workspace/TimeSformer/configs/Kinetics/TimeSformer_divST_8x32_224.yaml')
     cfg.TRAIN.ENABLE = False
     cfg.TIMESFORMER.PRETRAINED_MODEL = model_file
     model = MODEL_REGISTRY.get('vit_base_patch16_224')(cfg)
+    model.cuda()
 
-    with open('/workspace/timesformer/kinetics600-label.json') as f:
+    with open('/workspace/TimeSformer/kinetics600-label.json') as f:
         ssv2_labels = json.load(f)
     ssv2_labels = list(ssv2_labels.values())
 
-    path_to_video = Path('/workspace/timesformer/mfalldown.mp4')
+    path_to_video = Path('/workspace/RAFT/fig.mp4')
     assert path_to_video.exists(), "Video file does not exist."
 
     num_frames = 8
